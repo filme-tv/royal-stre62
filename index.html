@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#06080f">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Royal Streams">
+<title>Royal Streams</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+
+<style>
+:root {
+  --gold:#c9a227; --gold-l:#e8c456; --gold-d:#a07d14;
+  --bg:#06080f; --s1:#0e1220; --s2:#131828; --s3:#1a2035;
+  --border:rgba(255,255,255,.07); --border-g:rgba(201,162,39,.25);
+  --text:#fff; --muted:#8892a4; --muted2:#3d4a5c;
+  --red:#c8102e; --green:#22c55e;
+  --r:14px; --r-sm:10px;
+  --fd:'Cinzel',serif; --fb:'Outfit',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:var(--fb);min-height:100vh;overflow-x:hidden;-webkit-tap-highlight-color:transparent;}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 140% 60% at 50% -10%,#0c1230 0%,transparent 55%);pointer-events:none;z-index:0;}
+::-webkit-scrollbar{width:3px;height:3px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--gold-d);border-radius:3px;}
+button{cursor:pointer;font-family:var(--fb);}
+input,textarea{font-family:var(--fb);}
+img{display:block;}
+::selection{background:rgba(201,162,39,.3);}
+
+/* UTIL */
+.hidden{display:none!important;}
+.page{display:none;}
+.page.active{display:block;}
+#page-search.active{display:flex;flex-direction:column;}
+
+/* AUTH */
+.auth-screen{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;background:var(--bg);overflow-y:auto;}
+.auth-screen::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 80% 50% at 50% 0%,rgba(201,162,39,.07) 0%,transparent 60%);pointer-events:none;}
+.auth-box{position:relative;z-index:1;width:100%;max-width:420px;background:var(--s1);border:1px solid var(--border-g);border-radius:20px;padding:clamp(24px,5vw,40px);box-shadow:0 32px 80px rgba(0,0,0,.7);}
+.auth-logo{font-family:var(--fd);font-size:clamp(22px,5vw,30px);letter-spacing:6px;color:var(--gold);text-align:center;margin-bottom:4px;text-shadow:0 0 30px rgba(201,162,39,.4);}
+.auth-sub{font-size:11px;letter-spacing:4px;color:var(--muted);text-transform:uppercase;text-align:center;margin-bottom:28px;}
+.auth-title{font-size:18px;font-weight:700;margin-bottom:20px;}
+.form-group{margin-bottom:14px;}
+.form-label{display:block;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;font-weight:600;}
+.form-input{width:100%;padding:13px 16px;background:var(--s2);border:1px solid var(--border);border-radius:var(--r-sm);color:#fff;font-size:14px;outline:none;transition:border-color .2s,box-shadow .2s;}
+.form-input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,162,39,.1);}
+.form-input::placeholder{color:var(--muted2);}
+.btn-primary{width:100%;padding:14px;background:linear-gradient(135deg,var(--gold-d),var(--gold));border:none;border-radius:var(--r-sm);color:#000;font-size:14px;font-weight:700;letter-spacing:.5px;transition:all .2s;margin-top:6px;}
+.btn-primary:hover{filter:brightness(1.1);transform:translateY(-1px);}
+.btn-primary:active{transform:translateY(0);}
+.btn-primary:disabled{opacity:.6;transform:none;cursor:not-allowed;}
+.auth-switch{text-align:center;margin-top:18px;font-size:13px;color:var(--muted);}
+.auth-switch span{color:var(--gold);cursor:pointer;font-weight:600;}
+.form-err{font-size:12px;color:#ef4444;margin-top:4px;display:none;}
+.form-group.err .form-err{display:block;}
+.form-group.err .form-input{border-color:#ef4444;}
+
+/* EXPIRED */
+#expiredScreen{position:fixed;inset:0;z-index:180;display:none;flex-direction:column;align-items:center;justify-content:center;background:var(--bg);text-align:center;padding:32px;}
+.exp-icon{font-size:72px;margin-bottom:20px;}
+.exp-title{font-family:var(--fd);font-size:clamp(20px,5vw,32px);letter-spacing:4px;color:var(--gold);margin-bottom:12px;}
+.exp-text{font-size:15px;color:var(--muted);line-height:1.7;max-width:380px;}
+.btn-renew{margin-top:28px;padding:14px 32px;background:linear-gradient(135deg,var(--gold-d),var(--gold));border:none;border-radius:var(--r-sm);color:#000;font-size:14px;font-weight:700;}
+
+/* PROFILES */
+#profilesScreen{position:fixed;inset:0;z-index:190;display:none;flex-direction:column;align-items:center;justify-content:center;background:var(--bg);padding:30px 20px;overflow-y:auto;}
+.prof-title{font-family:var(--fd);font-size:clamp(18px,4vw,28px);letter-spacing:4px;text-align:center;margin-bottom:6px;}
+.prof-sub{font-size:13px;color:var(--muted);text-align:center;margin-bottom:36px;}
+.prof-grid{display:flex;flex-wrap:wrap;gap:20px;justify-content:center;max-width:500px;margin-bottom:28px;}
+.prof-card{display:flex;flex-direction:column;align-items:center;gap:10px;cursor:pointer;transition:transform .2s;}
+.prof-card:hover{transform:scale(1.05);}
+.prof-card:hover .prof-av{border-color:var(--gold);box-shadow:0 0 20px rgba(201,162,39,.3);}
+.prof-av{width:clamp(72px,15vw,90px);height:clamp(72px,15vw,90px);border-radius:14px;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:clamp(28px,6vw,36px);background:var(--s2);transition:all .2s;overflow:hidden;}
+.prof-name{font-size:13px;font-weight:600;color:var(--muted);text-align:center;}
+.prof-badge{font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:2px 8px;border-radius:20px;font-weight:700;background:rgba(201,162,39,.15);color:var(--gold);border:1px solid var(--border-g);}
+.prof-add{width:clamp(72px,15vw,90px);height:clamp(72px,15vw,90px);border-radius:14px;border:2px dashed var(--muted2);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;color:var(--muted);font-size:32px;}
+.prof-add:hover{border-color:var(--gold);color:var(--gold);}
+
+/* MODAL */
+.modal-bg{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.85);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:20px;}
+.modal-bg.open{display:flex;}
+.modal-card{background:var(--s1);border:1px solid var(--border-g);border-radius:20px;padding:28px;width:100%;max-width:380px;max-height:90vh;overflow-y:auto;}
+.modal-card h3{font-family:var(--fd);font-size:18px;letter-spacing:2px;color:var(--gold);margin-bottom:20px;text-align:center;}
+.av-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:20px;}
+.av-opt{aspect-ratio:1;border-radius:10px;border:2px solid transparent;display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer;background:var(--s2);transition:all .15s;}
+.av-opt:hover,.av-opt.sel{border-color:var(--gold);transform:scale(1.1);}
+.av-opt.sel{box-shadow:0 0 12px rgba(201,162,39,.4);}
+.type-row{display:flex;gap:10px;margin-bottom:16px;}
+.type-btn{flex:1;padding:10px;border:1px solid var(--border);border-radius:var(--r-sm);background:transparent;color:var(--muted);font-size:13px;font-weight:600;transition:all .2s;}
+.type-btn.active{background:rgba(201,162,39,.12);border-color:var(--gold);color:var(--gold);}
+.pin-row{display:flex;gap:12px;justify-content:center;margin:12px 0 20px;}
+.pin-d{width:52px;height:60px;border-radius:10px;border:1px solid var(--border);background:var(--s2);color:#fff;font-size:22px;font-weight:700;text-align:center;outline:none;transition:border-color .2s;-webkit-appearance:none;}
+.pin-d:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,162,39,.15);}
+
+/* APP */
+#appMain{display:none;position:relative;min-height:100vh;padding-bottom:80px;}
+
+/* HEADER */
+.app-hdr{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:clamp(12px,3vw,18px) clamp(16px,4vw,28px);background:linear-gradient(180deg,rgba(6,8,15,.95) 0%,rgba(6,8,15,0) 100%);transition:background .3s;}
+.app-hdr.solid{background:rgba(6,8,15,.97);backdrop-filter:blur(12px);}
+.hdr-logo{font-family:var(--fd);font-size:clamp(14px,3vw,20px);letter-spacing:5px;color:var(--gold);}
+.hdr-right{display:flex;align-items:center;gap:12px;}
+.hdr-av{width:36px;height:36px;border-radius:10px;border:2px solid var(--border-g);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;background:var(--s2);transition:border-color .2s;}
+.hdr-av:hover{border-color:var(--gold);}
+.coins-badge{display:flex;align-items:center;gap:5px;background:rgba(201,162,39,.1);border:1px solid var(--border-g);border-radius:20px;padding:5px 10px;font-size:12px;font-weight:700;color:var(--gold);}
+.menu-btn{width:36px;height:36px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;cursor:pointer;background:transparent;border:none;}
+.menu-btn span{display:block;width:22px;height:2px;background:var(--muted);border-radius:2px;}
+
+/* DRAWER */
+.drw-ovr{position:fixed;inset:0;z-index:150;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);display:none;}
+.drw-ovr.open{display:block;}
+.drawer{position:fixed;top:0;left:0;bottom:0;z-index:151;width:clamp(260px,80vw,310px);background:linear-gradient(170deg,#0a0e1c 0%,#06080f 100%);border-right:1px solid var(--border-g);transform:translateX(-100%);transition:transform .32s cubic-bezier(.4,0,.2,1);display:flex;flex-direction:column;overflow-y:auto;padding-bottom:30px;}
+.drawer.open{transform:translateX(0);}
+.drw-hdr{padding:clamp(40px,8vw,60px) 20px 24px;border-bottom:1px solid var(--border);}
+.drw-user{display:flex;align-items:center;gap:14px;}
+.drw-av{width:52px;height:52px;border-radius:12px;border:2px solid var(--border-g);display:flex;align-items:center;justify-content:center;font-size:22px;background:var(--s2);flex-shrink:0;}
+.drw-name{font-size:15px;font-weight:700;margin-bottom:3px;}
+.drw-coins{font-size:12px;color:var(--gold);font-weight:600;}
+.drw-plan{font-size:11px;color:var(--muted);margin-top:2px;}
+.drw-menu{flex:1;padding:12px 0;}
+.drw-item{display:flex;align-items:center;gap:14px;padding:13px 22px;color:var(--muted);font-size:14px;font-weight:500;cursor:pointer;transition:all .18s;border-left:2px solid transparent;}
+.drw-item:hover,.drw-item.active{color:#fff;background:rgba(255,255,255,.04);border-left-color:var(--gold);}
+.drw-sep{height:1px;background:var(--border);margin:8px 22px;}
+
+/* BOTTOM NAV */
+.bnav{position:fixed;bottom:0;left:0;right:0;z-index:100;display:flex;background:rgba(6,8,15,.97);backdrop-filter:blur(16px);border-top:1px solid var(--border);padding-bottom:env(safe-area-inset-bottom,0px);}
+.nav-it{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px 8px;cursor:pointer;color:var(--muted);font-size:10px;font-weight:600;letter-spacing:.3px;transition:color .2s;border-top:2px solid transparent;}
+.nav-it.active{color:var(--gold);border-top-color:var(--gold);}
+.nav-ico{font-size:20px;line-height:1;}
+
+/* HERO */
+.hero-sec{position:relative;width:100%;height:clamp(380px,70vw,580px);overflow:hidden;margin-bottom:32px;}
+.hero-bg{position:absolute;inset:0;background:var(--bg);}
+.hero-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center top;}
+.hero-ov{position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,8,15,.1) 0%,rgba(6,8,15,.25) 40%,rgba(6,8,15,.88) 75%,var(--bg) 100%),linear-gradient(90deg,rgba(6,8,15,.8) 0%,transparent 60%);}
+.hero-cnt{position:absolute;bottom:0;left:0;right:0;padding:clamp(20px,4vw,40px) clamp(16px,4vw,40px);}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;font-size:10px;letter-spacing:2px;text-transform:uppercase;font-weight:700;color:var(--gold);background:rgba(201,162,39,.1);border:1px solid var(--border-g);border-radius:20px;padding:4px 12px;margin-bottom:12px;}
+.hero-ttl{font-family:var(--fd);font-size:clamp(26px,6vw,54px);letter-spacing:2px;line-height:1.05;color:#fff;margin-bottom:10px;text-shadow:0 2px 20px rgba(0,0,0,.5);}
+.hero-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
+.hero-meta span{font-size:12px;color:var(--muted);font-weight:500;}
+.hero-dot{width:3px;height:3px;border-radius:50%;background:var(--muted2);}
+.hero-desc{font-size:13px;color:rgba(255,255,255,.7);line-height:1.6;max-width:380px;margin-bottom:20px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.hero-btns{display:flex;gap:12px;flex-wrap:wrap;}
+.btn-play{display:flex;align-items:center;gap:8px;padding:12px 22px;border:none;border-radius:var(--r-sm);background:linear-gradient(135deg,var(--gold-d),var(--gold));color:#000;font-size:14px;font-weight:700;transition:all .2s;}
+.btn-play:hover{filter:brightness(1.1);transform:scale(1.03);}
+.btn-info{display:flex;align-items:center;gap:8px;padding:12px 22px;border:1px solid rgba(255,255,255,.25);border-radius:var(--r-sm);background:rgba(255,255,255,.1);backdrop-filter:blur(8px);color:#fff;font-size:14px;font-weight:600;transition:all .2s;}
+.btn-info:hover{background:rgba(255,255,255,.18);}
+
+/* ROWS */
+.section{padding:0 clamp(14px,4vw,32px);margin-bottom:32px;}
+.sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.sec-ttl{font-family:var(--fd);font-size:clamp(12px,2.5vw,16px);letter-spacing:2px;}
+.sec-lnk{font-size:12px;color:var(--gold);cursor:pointer;font-weight:600;}
+.row{display:flex;gap:12px;overflow-x:auto;padding-bottom:8px;scrollbar-width:none;}
+.row::-webkit-scrollbar{display:none;}
+.card{flex-shrink:0;width:clamp(120px,28vw,155px);border-radius:var(--r-sm);overflow:hidden;cursor:pointer;transition:transform .25s cubic-bezier(.34,1.2,.64,1),box-shadow .25s;position:relative;background:var(--s1);}
+.card:hover{transform:scale(1.06);box-shadow:0 12px 32px rgba(0,0,0,.6),0 0 0 2px var(--gold);}
+.card-poster{width:100%;aspect-ratio:2/3;object-fit:cover;background:var(--s2);}
+.card-info{padding:8px 6px 6px;}
+.card-title{font-size:11px;font-weight:600;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.card-year{font-size:10px;color:var(--muted2);}
+.card-badge{position:absolute;top:6px;right:6px;font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;background:rgba(0,0,0,.7);color:var(--gold);border:1px solid var(--border-g);}
+.card-skel{flex-shrink:0;width:clamp(120px,28vw,155px);border-radius:var(--r-sm);overflow:hidden;background:var(--s1);aspect-ratio:2/3;animation:shimmer 1.6s infinite;}
+@keyframes shimmer{0%{opacity:.5}50%{opacity:1}100%{opacity:.5}}
+
+/* SEARCH */
+.srch-head{padding:80px clamp(14px,4vw,32px) 16px;}
+.srch-title{font-family:var(--fd);font-size:clamp(20px,4vw,28px);letter-spacing:3px;margin-bottom:14px;}
+.srch-bar{display:flex;align-items:center;gap:10px;background:var(--s1);border:1px solid var(--border);border-radius:40px;padding:0 16px;transition:border-color .2s;}
+.srch-bar:focus-within{border-color:var(--gold);}
+.srch-bar input{flex:1;background:transparent;border:none;outline:none;color:#fff;font-size:14px;padding:13px 0;}
+.srch-res{flex:1;overflow-y:auto;padding:8px clamp(14px,4vw,32px) 20px;}
+
+/* PAGE PAD */
+.ppd{padding:clamp(70px,12vw,90px) clamp(14px,4vw,32px) 20px;}
+.pg-ttl{font-family:var(--fd);font-size:clamp(20px,4vw,28px);letter-spacing:4px;color:var(--gold);margin-bottom:6px;}
+.pg-sub{font-size:12px;color:var(--muted);letter-spacing:1px;margin-bottom:24px;}
+
+/* TV CHANNELS */
+.tv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(clamp(110px,28vw,150px),1fr));gap:14px;}
+.ch-card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r-sm);padding:18px;text-align:center;cursor:pointer;transition:all .2s;}
+.ch-card:hover{border-color:var(--gold);background:var(--s2);}
+
+/* FEEDBACK */
+.stars{display:flex;gap:10px;margin:12px 0 20px;}
+.star{font-size:28px;cursor:pointer;color:var(--muted2);transition:all .15s;}
+.star.active{color:var(--gold);}
+
+/* COINS */
+.coins-disp{text-align:center;padding:32px 20px;background:linear-gradient(135deg,rgba(201,162,39,.08),rgba(201,162,39,.03));border:1px solid var(--border-g);border-radius:16px;margin-bottom:24px;}
+.coins-num{font-family:var(--fd);font-size:clamp(48px,10vw,72px);color:var(--gold);letter-spacing:4px;}
+.coins-lbl{font-size:12px;color:var(--muted);letter-spacing:3px;text-transform:uppercase;margin-top:4px;}
+.coins-hist{display:flex;flex-direction:column;gap:10px;}
+.ch-item{display:flex;align-items:center;justify-content:space-between;background:var(--s1);border:1px solid var(--border);border-radius:var(--r-sm);padding:14px 16px;}
+.ch-val.pos{color:var(--green);font-weight:700;}
+.ch-val.neg{color:#ef4444;font-weight:700;}
+
+/* PLAYER */
+#playerModal{position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.92);backdrop-filter:blur(10px);display:none;flex-direction:column;align-items:center;justify-content:center;padding:clamp(10px,3vw,24px);}
+#playerModal.open{display:flex;}
+.pl-wrap{width:100%;max-width:900px;background:var(--bg);border:1px solid var(--border-g);border-radius:16px;overflow:hidden;}
+.pl-fb{position:relative;padding-bottom:56.25%;background:#000;}
+.pl-fb iframe{position:absolute;inset:0;width:100%;height:100%;border:none;}
+.pl-shield{position:absolute;inset:0;z-index:5;pointer-events:none;}
+.pl-ctrl{padding:clamp(10px,3vw,16px);}
+.pl-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px;}
+.pl-ttl{font-family:var(--fd);font-size:clamp(13px,2.5vw,17px);letter-spacing:1px;flex:1;}
+.btn-cls{background:rgba(255,255,255,.08);border:1px solid var(--border);border-radius:8px;color:var(--muted);padding:6px 12px;font-size:13px;font-weight:600;transition:all .2s;flex-shrink:0;}
+.btn-cls:hover{background:rgba(255,255,255,.14);color:#fff;}
+.pl-opts{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px;}
+.opt-lbl{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);font-weight:600;}
+.opt-btn{padding:5px 12px;border-radius:20px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:var(--muted);font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;}
+.opt-btn:hover{border-color:rgba(201,162,39,.4);color:#fff;}
+.opt-btn.active{background:rgba(201,162,39,.15);border-color:rgba(201,162,39,.5);color:var(--gold);}
+
+/* TOAST */
+#toast{position:fixed;bottom:clamp(90px,15vw,110px);left:50%;transform:translateX(-50%) translateY(20px);z-index:500;background:var(--s2);border:1px solid var(--border-g);border-radius:10px;padding:11px 20px;font-size:13px;font-weight:500;white-space:nowrap;opacity:0;transition:all .3s;pointer-events:none;box-shadow:0 8px 32px rgba(0,0,0,.5);}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* PWA */
+#pwaBanner{position:fixed;bottom:0;left:0;right:0;z-index:600;background:var(--bg);border-top:1px solid var(--border-g);padding:clamp(14px,3vw,20px);display:none;flex-direction:column;gap:14px;animation:slideUp .35s ease;}
+#pwaBanner.show{display:flex;}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.pwa-row{display:flex;align-items:center;gap:14px;}
+.pwa-logo{width:48px;height:48px;border-radius:12px;background:linear-gradient(135deg,var(--gold-d),var(--gold));display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:13px;color:#000;flex-shrink:0;}
+.pwa-btns{display:flex;gap:10px;}
+.btn-install{flex:2;padding:12px;background:var(--gold);border:none;border-radius:var(--r-sm);color:#000;font-size:13px;font-weight:700;}
+.btn-cancel{flex:1;padding:12px;background:transparent;border:1px solid var(--border);border-radius:var(--r-sm);color:var(--muted);font-size:13px;}
+
+/* TV layout */
+@media(min-width:1200px){
+  #appMain{padding-left:0;}
+  .hero-sec{height:clamp(450px,50vh,650px);}
+  .card{width:clamp(150px,12vw,185px);}
+  .hero-desc{-webkit-line-clamp:3;}
+}
+@media(max-width:380px){
+  .btn-play,.btn-info{padding:10px 16px;font-size:13px;}
+  .hero-ttl{font-size:clamp(20px,6vw,26px);}
+}
+
+.nav-ico{display:flex;align-items:center;justify-content:center;}
+.nav-ico svg{width:20px;height:20px;}
+.drw-item svg{width:17px;height:17px;flex-shrink:0;}
+.exp-icon svg{width:72px;height:72px;}
+</style>
+</head>
+<body>
+<!-- SVG ICON SYSTEM -->
+<svg style="display:none" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="ico-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.75L12 3l9 6.75V21a1 1 0 01-1 1H5a1 1 0 01-1-1V9.75z"/><path d="M9 22V12h6v10"/></symbol>
+  <symbol id="ico-film" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="18" rx="2"/><path d="M7 3v18M17 3v18M2 8h5M17 8h5M2 13h5M17 13h5"/></symbol>
+  <symbol id="ico-tv" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="14" rx="2"/><path d="M8 20h8M12 18v2"/></symbol>
+  <symbol id="ico-anime" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></symbol>
+  <symbol id="ico-signal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12C2 6.48 6.48 2 12 2s10 4.48 10 10"/><path d="M5 12c0-3.87 3.13-7 7-7s7 3.13 7 7"/><path d="M8 12c0-2.21 1.79-4 4-4s4 1.79 4 4"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></symbol>
+  <symbol id="ico-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></symbol>
+  <symbol id="ico-heart" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></symbol>
+  <symbol id="ico-trophy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h12v6a6 6 0 01-12 0V2z"/><path d="M4 6H2v2a4 4 0 004 4M20 6h2v2a4 4 0 01-4 4M12 14v4M8 22h8"/></symbol>
+  <symbol id="ico-star" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></symbol>
+  <symbol id="ico-coin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v2M12 16v2M9 9h4.5a1.5 1.5 0 010 3H10.5a1.5 1.5 0 000 3H15"/></symbol>
+  <symbol id="ico-msg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></symbol>
+  <symbol id="ico-download" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></symbol>
+  <symbol id="ico-logout" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></symbol>
+  <symbol id="ico-user" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></symbol>
+  <symbol id="ico-crown" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20h20M4 20L2 8l5 4 5-8 5 8 5-4-2 12H4z"/></symbol>
+  <symbol id="ico-play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="5 3 19 12 5 21 5 3" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="ico-info" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></symbol>
+  <symbol id="ico-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></symbol>
+  <symbol id="ico-channel" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="14" rx="2"/><path d="M8 20h8M12 18v2"/><circle cx="12" cy="11" r="3"/></symbol>
+  <symbol id="ico-trend" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></symbol>
+</svg>
+
+
+<!-- LOGIN -->
+<div class="auth-screen" id="loginScreen">
+  <div class="auth-box">
+    <div class="auth-logo">ROYAL</div>
+    <div class="auth-sub">Streams · Premium</div>
+    <div class="auth-title">Entrar na conta</div>
+    <div class="form-group" id="fg-lemail">
+      <label class="form-label">E-mail</label>
+      <input class="form-input" type="email" id="loginEmail" placeholder="seu@email.com">
+      <div class="form-err">E-mail inválido</div>
+    </div>
+    <div class="form-group" id="fg-lsenha">
+      <label class="form-label">Senha</label>
+      <input class="form-input" type="password" id="loginSenha" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
+      <div class="form-err">Senha obrigatória</div>
+    </div>
+    <button class="btn-primary" id="btnLogin" onclick="doLogin()">Entrar</button>
+    <div class="auth-switch">Não tem conta? <span onclick="showScreen('cadastro')">Criar agora</span></div>
+  </div>
+</div>
+
+<!-- CADASTRO -->
+<div class="auth-screen hidden" id="cadastroScreen">
+  <div class="auth-box">
+    <div class="auth-logo">ROYAL</div>
+    <div class="auth-sub">Streams · Premium</div>
+    <div class="auth-title">Criar conta</div>
+    <div class="form-group" id="fg-nome">
+      <label class="form-label">Nome</label>
+      <input class="form-input" type="text" id="cadNome" placeholder="Seu nome">
+      <div class="form-err">Nome obrigatório</div>
+    </div>
+    <div class="form-group" id="fg-email">
+      <label class="form-label">E-mail</label>
+      <input class="form-input" type="email" id="cadEmail" placeholder="seu@email.com">
+      <div class="form-err">E-mail inválido</div>
+    </div>
+    <div class="form-group" id="fg-senha">
+      <label class="form-label">Senha</label>
+      <input class="form-input" type="password" id="cadSenha" placeholder="Mínimo 6 caracteres">
+      <div class="form-err">Mínimo 6 caracteres</div>
+    </div>
+    <div class="form-group" id="fg-senha2">
+      <label class="form-label">Repetir Senha</label>
+      <input class="form-input" type="password" id="cadSenha2" placeholder="Repita a senha" onkeydown="if(event.key==='Enter')doCadastro()">
+      <div class="form-err">As senhas não coincidem</div>
+    </div>
+    <button class="btn-primary" id="btnCad" onclick="doCadastro()">Criar Conta</button>
+    <div class="auth-switch">Já tem conta? <span onclick="showScreen('login')">Entrar</span></div>
+  </div>
+</div>
+
+<!-- CONTA VENCIDA -->
+<div id="expiredScreen">
+  <div class="exp-icon"><svg style="width:72px;height:72px;color:var(--gold)"><use href="#ico-crown"/></svg></div>
+  <div class="exp-title">PLANO VENCIDO</div>
+  <div class="exp-text">Ops! Seu Plano Premium venceu.<br>Renove agora para continuar assistindo.</div>
+  <button class="btn-renew" onclick="showToast('Entre em contato para renovar!')">Renovar Plano</button>
+  <div style="margin-top:16px;font-size:13px;color:var(--muted);cursor:pointer;" onclick="doLogout()">← Sair</div>
+</div>
+
+<!-- PERFIS -->
+<div id="profilesScreen">
+  <div class="prof-title">Quem está assistindo?</div>
+  <div class="prof-sub">Selecione ou crie um perfil</div>
+  <div class="prof-grid" id="profGrid"></div>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:8px;cursor:pointer;" onclick="openAddProfile()">
+    <div class="prof-add">+</div>
+    <div style="font-size:12px;color:var(--muted);">Novo perfil</div>
+  </div>
+</div>
+
+<!-- POPUP CRIAR PERFIL -->
+<div class="modal-bg" id="addProfModal">
+  <div class="modal-card">
+    <h3>CRIAR PERFIL</h3>
+    <div style="font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;font-weight:600;">Avatar</div>
+    <div class="av-grid" id="avGrid"></div>
+    <div class="form-group" style="margin-bottom:14px;">
+      <label class="form-label">Nome do perfil</label>
+      <input class="form-input" type="text" id="profName" placeholder="Ex: João">
+    </div>
+    <div style="font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;font-weight:600;">Tipo</div>
+    <div class="type-row">
+      <button class="type-btn active" id="typeAdulto" onclick="setProfType('adulto')">Adulto</button>
+      <button class="type-btn" id="typeInf" onclick="setProfType('infantil')">Infantil</button>
+    </div>
+    <div id="pinSec" style="margin-bottom:16px;">
+      <div style="font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;font-weight:600;">PIN (4 dígitos)</div>
+      <div class="pin-row">
+        <input class="pin-d" type="tel" maxlength="1" id="p0" oninput="pinNext(0)" inputmode="numeric">
+        <input class="pin-d" type="tel" maxlength="1" id="p1" oninput="pinNext(1)" inputmode="numeric">
+        <input class="pin-d" type="tel" maxlength="1" id="p2" oninput="pinNext(2)" inputmode="numeric">
+        <input class="pin-d" type="tel" maxlength="1" id="p3" oninput="pinNext(3)" inputmode="numeric">
+      </div>
+    </div>
+    <button class="btn-primary" onclick="createProfile()">Criar Perfil</button>
+    <div style="text-align:center;margin-top:14px;font-size:13px;color:var(--muted);cursor:pointer;" onclick="closeModal('addProfModal')">Cancelar</div>
+  </div>
+</div>
+
+<!-- APP PRINCIPAL -->
+<div id="appMain">
+
+  <!-- HEADER -->
+  <header class="app-hdr" id="appHdr">
+    <button class="menu-btn" onclick="openDrawer()">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="hdr-logo">ROYAL</div>
+    <div class="hdr-right">
+      <div class="coins-badge" id="hdrCoins"><svg style="width:13px;height:13px"><use href="#ico-coin"/></svg> <span id="hdrCoinsVal">0</span></div>
+      <div class="hdr-av" id="hdrAv" onclick="openDrawer()"><svg style="width:18px;height:18px"><use href="#ico-user"/></svg></div>
+    </div>
+  </header>
+
+  <!-- DRAWER -->
+  <div class="drw-ovr" id="drwOvr" onclick="closeDrawer()"></div>
+  <nav class="drawer" id="drawer">
+    <div class="drw-hdr">
+      <div class="drw-user">
+        <div class="drw-av" id="drwAv"><svg style="width:22px;height:22px"><use href="#ico-user"/></svg></div>
+        <div>
+          <div class="drw-name" id="drwName">—</div>
+          <div class="drw-coins" id="drwCoins"><svg style="width:12px;height:12px;vertical-align:middle;margin-right:3px"><use href="#ico-coin"/></svg><span>0 Royal Coins</span></div>
+          <div class="drw-plan" id="drwPlan">—</div>
+        </div>
+      </div>
+    </div>
+    <div class="drw-menu">
+      <div class="drw-item active" onclick="goPage('home');closeDrawer()"><span style="width:20px;text-align:center;"><svg style="width:17px;height:17px"><use href="#ico-home"/></svg></span>Home</div>
+      <div class="drw-item" onclick="goPage('movies');closeDrawer()"><span style="width:20px;text-align:center;"><svg style="width:17px;height:17px"><use href="#ico-film"/></svg></span>Filmes</div>
+      <div class="drw-item" onclick="goPage('series');closeDrawer()"><span style="width:20px;text-align:center;"><svg style="width:17px;height:17px"><use href="#ico-tv"/></svg></span>Séries</div>
+      <div class="drw-item" onclick="goPage('animes');closeDrawer()"><span style="width:20px;text-align:center;"><svg style="width:17px;height:17px"><use href="#ico-anime"/></svg></span>Animes</div>
+      <div class="drw-item" onclick="goPage('tv');closeDrawer()"><span style="width:20px;text-align:center;"><svg style="width:17px;height:17px"><use href="#ico-signal"/></svg></span>Royal TV</div>
+      <div class="drw-sep"></div>
+      <div class="drw-item" onclick="goPage('favorites');closeDrawer()"><span style="width:20px;text-align:center;"><svg style="width:17px;height:17px"><use href="#ico-heart"/></svg></span>Favoritos</div>
+      <div class="drw-item" onclick="goPage('ranking');closeDrawer()"><span style="width:20px;text-align:center;"><svg style="width:17px;height:17px"><use href="#ico-trophy"/></svg></span>Ranking</div>
+      <div class="drw-item" onclick="goPage('feedback');closeDrawer()"><span style="width:20px;text-align:center;"><svg style="width:17px;height:17px"><use href="#ico-msg"/></svg></span>Feedback</div>
+      <div class="drw-item" onclick="goPage('coins');closeDrawer()"><span style="width:20px;text-align:center;"><svg style="width:17px;height:17px"><use href="#ico-coin"/></svg></span>Royal Coins</div>
+      <div class="drw-sep"></div>
+      <div class="drw-item" onclick="installPWA();closeDrawer()"><span style="width:20px;text-align:center;"><svg style="width:17px;height:17px"><use href="#ico-download"/></svg></span>Instalar Aplicativo</div>
+      <div class="drw-item" onclick="doLogout()"><span style="width:20px;text-align:center;"><svg style="width:17px;height:17px"><use href="#ico-logout"/></svg></span>Sair da conta</div>
+    </div>
+  </nav>
+
+  <!-- HOME -->
+  <div class="page active" id="page-home">
+    <div class="hero-sec">
+      <div class="hero-bg">
+        <img class="hero-img" id="heroImg" src="" alt="">
+        <div class="hero-ov"></div>
+      </div>
+      <div class="hero-cnt">
+        <div class="hero-badge"><svg style="width:11px;height:11px"><use href="#ico-star"/></svg> EM DESTAQUE</div>
+        <div class="hero-ttl" id="heroTtl">Carregando...</div>
+        <div class="hero-meta" id="heroMeta"></div>
+        <div class="hero-desc" id="heroDesc"></div>
+        <div class="hero-btns">
+          <button class="btn-play" onclick="playHero()"><svg style="width:14px;height:14px"><use href="#ico-play"/></svg> Reproduzir</button>
+          <button class="btn-info" onclick="showToast('Detalhes em breve')"><svg style="width:14px;height:14px"><use href="#ico-info"/></svg> Detalhes</button>
+        </div>
+      </div>
+    </div>
+    <div class="section">
+      <div class="sec-hdr"><div class="sec-ttl">POPULARES</div><div class="sec-lnk" onclick="goPage('movies')">Ver todos →</div></div>
+      <div class="row" id="rowPop"></div>
+    </div>
+    <div class="section">
+      <div class="sec-hdr"><div class="sec-ttl">SÉRIES</div><div class="sec-lnk" onclick="goPage('series')">Ver todos →</div></div>
+      <div class="row" id="rowSer"></div>
+    </div>
+    <div class="section">
+      <div class="sec-hdr"><div class="sec-ttl">ANIMES</div><div class="sec-lnk" onclick="goPage('animes')">Ver todos →</div></div>
+      <div class="row" id="rowAni"></div>
+    </div>
+    <div class="section">
+      <div class="sec-hdr"><div class="sec-ttl">NOVIDADES</div></div>
+      <div class="row" id="rowNew"></div>
+    </div>
+  </div>
+
+  <!-- FILMES -->
+  <div class="page" id="page-movies">
+    <div class="ppd">
+      <div class="pg-ttl">FILMES</div><div class="pg-sub">Catálogo completo</div>
+      <div class="row" id="rowMov" style="flex-wrap:wrap;overflow:visible;gap:12px;"></div>
+    </div>
+  </div>
+
+  <!-- SÉRIES -->
+  <div class="page" id="page-series">
+    <div class="ppd">
+      <div class="pg-ttl">SÉRIES</div><div class="pg-sub">Todas as temporadas</div>
+      <div class="row" id="rowSeries" style="flex-wrap:wrap;overflow:visible;gap:12px;"></div>
+    </div>
+  </div>
+
+  <!-- ANIMES -->
+  <div class="page" id="page-animes">
+    <div class="ppd">
+      <div class="pg-ttl">ANIMES</div><div class="pg-sub">Os melhores animes</div>
+      <div class="row" id="rowAnimes" style="flex-wrap:wrap;overflow:visible;gap:12px;"></div>
+    </div>
+  </div>
+
+  <!-- ROYAL TV -->
+  <div class="page" id="page-tv">
+    <div class="ppd">
+      <div class="pg-ttl">ROYAL TV</div><div class="pg-sub">Canais ao vivo</div>
+      <div class="tv-grid" id="tvGrid"></div>
+    </div>
+  </div>
+
+  <!-- BUSCA -->
+  <div class="page" id="page-search">
+    <div class="srch-head">
+      <div class="srch-title">BUSCAR</div>
+      <div class="srch-bar">
+        <svg style="width:17px;height:17px;color:var(--muted);flex-shrink:0"><use href="#ico-search"/></svg>
+        <input type="search" id="srchInput" placeholder="Filmes, séries, animes..." oninput="doSearch(this.value)" autocomplete="off">
+        <span id="srchClear" style="color:var(--muted);cursor:pointer;display:none;line-height:1;display:none;" onclick="clearSearch()"><svg style="width:15px;height:15px"><use href="#ico-close"/></svg></span>
+      </div>
+    </div>
+    <div class="srch-res" id="srchRes">
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:300px;gap:12px;">
+        <svg style="width:50px;height:50px;opacity:.25;color:var(--muted)"><use href="#ico-search"/></svg>
+        <div style="font-size:14px;color:var(--muted);">Digite para buscar</div>
+        <div style="font-size:12px;color:var(--muted2);">Filmes, séries e animes</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FAVORITOS -->
+  <div class="page" id="page-favorites">
+    <div class="ppd">
+      <div class="pg-ttl">FAVORITOS</div><div class="pg-sub">Sua lista</div>
+      <div class="row" id="rowFavs" style="flex-wrap:wrap;overflow:visible;gap:12px;"></div>
+    </div>
+  </div>
+
+  <!-- RANKING -->
+  <div class="page" id="page-ranking">
+    <div class="ppd">
+      <div class="pg-ttl">RANKING</div><div class="pg-sub">Os mais assistidos</div>
+      <div id="rankList"></div>
+    </div>
+  </div>
+
+  <!-- FEEDBACK -->
+  <div class="page" id="page-feedback">
+    <div class="ppd">
+      <div class="pg-ttl">FEEDBACK</div><div class="pg-sub">Sua opinião importa · +20 coins</div>
+      <div class="form-group">
+        <label class="form-label">Avaliação</label>
+        <div class="stars" id="starsRow">
+          <span class="star" onclick="setStar(1)">★</span><span class="star" onclick="setStar(2)">★</span>
+          <span class="star" onclick="setStar(3)">★</span><span class="star" onclick="setStar(4)">★</span>
+          <span class="star" onclick="setStar(5)">★</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Comentário</label>
+        <textarea class="form-input" id="fbText" placeholder="Escreva seu comentário..." style="resize:vertical;min-height:100px;"></textarea>
+      </div>
+      <button class="btn-primary" onclick="sendFeedback()">Enviar Feedback</button>
+    </div>
+  </div>
+
+  <!-- COINS -->
+  <div class="page" id="page-coins">
+    <div class="ppd">
+      <div class="pg-ttl">ROYAL COINS</div><div class="pg-sub">Saldo e histórico</div>
+      <div class="coins-disp">
+        <div class="coins-num" id="coinsNum">0</div>
+        <div class="coins-lbl">Royal Coins</div>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;">Histórico</div>
+      <div class="coins-hist" id="coinsHist">
+        <div style="font-size:13px;color:var(--muted2);text-align:center;padding:20px;">Nenhuma transação</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bnav" id="bottomNav">
+    <div class="nav-it active" id="nav-home" onclick="goPage('home')"><div class="nav-ico"><svg><use href="#ico-home"/></svg></div><span>Home</span></div>
+    <div class="nav-it" id="nav-movies" onclick="goPage('movies')"><div class="nav-ico"><svg><use href="#ico-film"/></svg></div><span>Filmes</span></div>
+    <div class="nav-it" id="nav-series" onclick="goPage('series')"><div class="nav-ico"><svg><use href="#ico-tv"/></svg></div><span>Séries</span></div>
+    <div class="nav-it" id="nav-animes" onclick="goPage('animes')"><div class="nav-ico"><svg><use href="#ico-anime"/></svg></div><span>Animes</span></div>
+    <div class="nav-it" id="nav-tv" onclick="goPage('tv')"><div class="nav-ico"><svg><use href="#ico-signal"/></svg></div><span>Royal TV</span></div>
+  </nav>
+</div>
+
+<!-- PLAYER -->
+<div id="playerModal">
+  <div class="pl-wrap">
+    <div class="pl-fb">
+      <iframe id="playerFrame" src="" allowfullscreen allow="autoplay;fullscreen;picture-in-picture"
+        sandbox="allow-scripts allow-same-origin allow-forms allow-presentation allow-pointer-lock"
+        referrerpolicy="no-referrer"></iframe>
+      <div class="pl-shield"></div>
+    </div>
+    <div class="pl-ctrl">
+      <div class="pl-top">
+        <div class="pl-ttl" id="plTtl">—</div>
+        <button class="btn-cls" onclick="closePlayer()"><svg style="width:12px;height:12px;vertical-align:middle;margin-right:3px"><use href="#ico-close"/></svg>Fechar</button>
+      </div>
+      <div class="pl-opts">
+        <span class="opt-lbl">Idioma:</span>
+        <button class="opt-btn active" id="langPT" onclick="setLang('pt')">PT-BR</button>
+        <button class="opt-btn" id="langEN" onclick="setLang('en')">EN-US</button>
+        <span class="opt-lbl" style="margin-left:6px;">Servidor:</span>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;" id="srvBtns"></div>
+    </div>
+  </div>
+</div>
+
+<!-- PWA BANNER -->
+<div id="pwaBanner">
+  <div class="pwa-row">
+    <div class="pwa-logo">RS</div>
+    <div style="flex:1;">
+      <div style="font-family:var(--fd);font-size:15px;letter-spacing:2px;color:var(--gold);">ROYAL STREAMS</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:2px;">Instalar na tela inicial</div>
+    </div>
+    <div onclick="dismissPWA()" style="color:var(--muted);cursor:pointer;display:flex;align-items:center;"><svg style="width:18px;height:18px"><use href="#ico-close"/></svg></div>
+  </div>
+  <div class="pwa-btns">
+    <button class="btn-cancel" onclick="dismissPWA()">Agora não</button>
+    <button class="btn-install" onclick="installPWA()">Instalar</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script type="module">
+import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, get, set, update, onValue, push } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const FB = { apiKey:"AIzaSyAlAx_HCmlYXvsUuKxOopQsAAoHUmjp5NU", authDomain:"royalcore-royalstreams.firebaseapp.com", databaseURL:"https://royalcore-royalstreams-default-rtdb.firebaseio.com", projectId:"royalcore-royalstreams", storageBucket:"royalcore-royalstreams.firebasestorage.app", messagingSenderId:"1065662141942", appId:"1:1065662141942:web:0dc0d903bb618fdfc863d7" };
+const app = getApps().find(a=>a.name==='rs')||initializeApp(FB,'rs');
+const db  = getDatabase(app);
+
+// ── CONFIG ─────────────────────────────────────────────
+const TMDB_KEY = "93f6cc12e6897cce8be566c0e2f43a3b";
+const TAPI     = "https://api.themoviedb.org/3";
+const IMG      = "https://image.tmdb.org/t/p/w500";
+const OIMG     = "https://image.tmdb.org/t/p/original";
+const AVATARS  = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O'];
+const SERVERS  = [
+  { n:'VidSrc',    u:(id,tv,l)=>tv?`https://vidsrc.to/embed/tv/${id}`:`https://vidsrc.to/embed/movie/${id}` },
+  { n:'VidSrc.me', u:(id,tv,l)=>tv?`https://vidsrc.me/embed/tv?tmdb=${id}`:`https://vidsrc.me/embed/movie?tmdb=${id}` },
+  { n:'SuperEmbed',u:(id,tv,l)=>(tv?`https://multiembed.mov/?video_id=${id}&tmdb=1&s=1&e=1`:`https://multiembed.mov/?video_id=${id}&tmdb=1`)+(l==='pt'?'&lang=pt-BR':'') },
+  { n:'Embed.su',  u:(id,tv,l)=>tv?`https://embed.su/embed/tv/${id}/1/1`:`https://embed.su/embed/movie/${id}` },
+  { n:'2Embed',    u:(id,tv,l)=>tv?`https://www.2embed.cc/embedtv/${id}&s=1&e=1`:`https://www.2embed.cc/embed/${id}` },
+];
+
+// ── ESTADO ─────────────────────────────────────────────
+let currentUser=null, currentProfile=null, coins=0, planDays=0;
+let coinsListener=null, planInterval=null;
+let heroItem=null, loadedPages=new Set();
+let _playerOpen=false, playerState={item:null,isTv:false,lang:'pt',server:0};
+let selAvatar='A', profType='adulto';
+let starRating=0, deferredPrompt=null, toastTimer=null, srchTimer=null;
+
+// ── UTILS ───────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const sanitize = s => s.replace(/[.#$[\]@]/g,'_');
+function showToast(m){clearTimeout(toastTimer);const t=$('toast');t.textContent=m;t.classList.add('show');toastTimer=setTimeout(()=>t.classList.remove('show'),3200);}
+function tmdb(ep){return fetch(`${TAPI}${ep}${ep.includes('?')?'&':'?'}api_key=${TMDB_KEY}&language=pt-BR`).then(r=>r.json()).catch(()=>({results:[]}));}
+function skels(id,n=8){const r=$(id);if(r)r.innerHTML=Array(n).fill('<div class="card-skel"></div>').join('');}
+function renderRow(id,items,isTv=false){
+  const row=$(id);if(!row)return;
+  if(!items?.length){row.innerHTML='<div style="color:var(--muted);font-size:13px;padding:20px;">Sem conteúdo</div>';return;}
+  row.innerHTML=items.map(it=>{
+    const t=it.title||it.name||'',y=(it.release_date||it.first_air_date||'').slice(0,4),p=it.poster_path?IMG+it.poster_path:'',r=it.vote_average?.toFixed(1)||'';
+    const data=JSON.stringify(it).replace(/"/g,'&quot;');
+    return `<div class="card" onclick="openItem(${data},${isTv})">${p?`<img class="card-poster" src="${p}" alt="${t}" loading="lazy">`:`<div class="card-poster" style="display:flex;align-items:center;justify-content:center;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--muted2)" stroke-width="1.5"><rect x="2" y="2" width="20" height="20" rx="2"/></svg></div>`}${r?`<div class="card-badge">${r}</div>`:''}<div class="card-info"><div class="card-title">${t}</div><div class="card-year">${y}</div></div></div>`;
+  }).join('');
+}
+
+// ── TELAS ───────────────────────────────────────────────
+function showScreen(s){
+  $('loginScreen').classList.toggle('hidden',s!=='login');
+  $('cadastroScreen').classList.toggle('hidden',s!=='cadastro');
+  $('profilesScreen').style.display=s==='profiles'?'flex':'none';
+  $('expiredScreen').style.display=s==='expired'?'flex':'none';
+  $('appMain').style.display=s==='app'?'block':'none';
+}
+window.showScreen=showScreen;
+showScreen('login');
+
+// ── CADASTRO ────────────────────────────────────────────
+window.doCadastro=async function(){
+  const nome=$('cadNome').value.trim(),email=$('cadEmail').value.trim(),senha=$('cadSenha').value,s2=$('cadSenha2').value;
+  let ok=true;
+  const m=(id,e)=>{$('fg-'+id)?.classList.toggle('err',e);if(e)ok=false;};
+  m('nome',!nome); m('email',!email||!/\S+@\S+\.\S+/.test(email)); m('senha',senha.length<6); m('senha2',senha!==s2);
+  if(!ok)return;
+  const btn=$('btnCad'); btn.disabled=true; btn.textContent='Criando...';
+  try{
+    const uid=sanitize(email),uRef=ref(db,'royal-streams/usuarios/'+uid),snap=await get(uRef);
+    if(snap.exists()){showToast('E-mail já cadastrado!');btn.disabled=false;btn.textContent='Criar Conta';return;}
+    await set(uRef,{uid,email,nome,senha,coins:0,plano_dias:31,plano_ativo:true,cadastro:new Date().toISOString(),ultimo_acesso:new Date().toISOString()});
+    currentUser={email,uid,nome}; coins=0; planDays=31;
+    showToast('Conta criada. Bem-vindo(a)');
+    renderProfiles(); showScreen('profiles');
+  }catch(e){showToast('Erro. Verifique sua conexão.'); console.error(e);}
+  btn.disabled=false; btn.textContent='Criar Conta';
+};
+
+// ── LOGIN ───────────────────────────────────────────────
+window.doLogin=async function(){
+  const email=$('loginEmail').value.trim(),senha=$('loginSenha').value;
+  let ok=true;
+  const m=(id,e)=>{$('fg-'+id)?.classList.toggle('err',e);if(e)ok=false;};
+  m('lemail',!email||!/\S+@\S+\.\S+/.test(email)); m('lsenha',!senha);
+  if(!ok)return;
+  const btn=$('btnLogin'); btn.disabled=true; btn.textContent='Entrando...';
+  try{
+    const uid=sanitize(email),uRef=ref(db,'royal-streams/usuarios/'+uid),snap=await get(uRef);
+    if(!snap.exists()){showToast('E-mail não encontrado.');btn.disabled=false;btn.textContent='Entrar';return;}
+    const d=snap.val();
+    if(d.senha!==senha){showToast('Senha incorreta.');btn.disabled=false;btn.textContent='Entrar';return;}
+    currentUser={email:d.email,uid,nome:d.nome};
+    coins=typeof d.coins==='number'?d.coins:0;
+    planDays=typeof d.plano_dias==='number'?d.plano_dias:0;
+    await update(uRef,{ultimo_acesso:new Date().toISOString()});
+    startCoinsListener(uid); startPlanClock(uid);
+    if(!d.plano_ativo||planDays<=0){showScreen('expired');}
+    else{renderProfiles();showScreen('profiles');}
+  }catch(e){showToast('Erro. Verifique sua conexão.');console.error(e);}
+  btn.disabled=false; btn.textContent='Entrar';
+};
+
+window.doLogout=function(){
+  if(coinsListener){coinsListener();coinsListener=null;}
+  clearInterval(planInterval);
+  currentUser=currentProfile=null; coins=planDays=0;
+  showScreen('login');
+};
+
+// ── COINS / PLANO ───────────────────────────────────────
+function startCoinsListener(uid){
+  if(coinsListener)coinsListener();
+  coinsListener=onValue(ref(db,'royal-streams/usuarios/'+uid),snap=>{
+    if(!snap.exists()||!currentUser)return;
+    const d=snap.val();
+    if(typeof d.coins==='number'&&d.coins!==coins){const p=coins;coins=d.coins;updCoinsUI();if(coins>p)showToast(`+${coins-p} Royal Coins recebidos`);}
+  });
+}
+async function startPlanClock(uid){
+  clearInterval(planInterval);
+  planInterval=setInterval(async()=>{
+    if(!currentUser||planDays<=0){clearInterval(planInterval);return;}
+    planDays--;
+    if(planDays<=0){planDays=0;clearInterval(planInterval);try{await update(ref(db,'royal-streams/usuarios/'+uid),{plano_dias:0,plano_ativo:false});}catch(e){}showScreen('expired');}
+    else{try{await update(ref(db,'royal-streams/usuarios/'+uid),{plano_dias:planDays});}catch(e){}}
+    updPlanUI();
+  },86400000);
+}
+function updCoinsUI(){
+  if($('hdrCoinsVal'))$('hdrCoinsVal').textContent=coins;
+  if($('drwCoins'))$('drwCoins').querySelector('span').textContent=`${coins} Royal Coins`;
+  if($('coinsNum'))$('coinsNum').textContent=coins;
+}
+function updPlanUI(){if($('drwPlan'))$('drwPlan').textContent=planDays>0?`Premium · ${planDays} dias`:'Plano vencido';}
+async function syncCoins(){if(!currentUser)return;try{await update(ref(db,'royal-streams/usuarios/'+currentUser.uid),{coins:Number(coins)});}catch(e){}}
+function addHist(desc,val){const k='ch_'+currentUser?.uid;const h=JSON.parse(localStorage.getItem(k)||'[]');h.push({desc,val,ts:Date.now()});localStorage.setItem(k,JSON.stringify(h));}
+
+// ── PERFIS ──────────────────────────────────────────────
+function renderProfiles(){
+  const g=$('profGrid');if(!g)return;g.innerHTML='';
+  const saved=JSON.parse(localStorage.getItem('prof_'+(currentUser?.uid||''))||'[]');
+  saved.forEach(p=>{
+    const c=document.createElement('div');c.className='prof-card';
+    c.innerHTML=`<div class="prof-av" style="background:${p.color||'var(--s2)'};font-family:var(--fd);font-size:22px;font-weight:700;color:#000;">${p.avatar}</div><div class="prof-name">${p.nome}</div><div class="prof-badge">${p.tipo==='adulto'?'Adulto':'Infantil'}</div>`;
+    c.onclick=()=>selectProfile(p);g.appendChild(c);
+  });
+}
+function selectProfile(p){
+  currentProfile=p;
+  $('hdrAv').textContent=p.avatar; $('drwAv').textContent=p.avatar;
+  $('hdrAv').style.cssText='font-family:var(--fd);font-size:15px;font-weight:700;color:var(--gold);width:36px;height:36px;border-radius:10px;border:2px solid var(--border-g);display:flex;align-items:center;justify-content:center;cursor:pointer;background:var(--s2);transition:border-color .2s;';
+  $('drwAv').style.cssText='width:52px;height:52px;border-radius:12px;border:2px solid var(--border-g);display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:18px;font-weight:700;color:var(--gold);background:var(--s2);flex-shrink:0;';
+  $('drwName').textContent=p.nome;
+  updCoinsUI(); updPlanUI();
+  showScreen('app');
+  goPage('home');
+  loadHome(); renderTV();
+  setTimeout(showPWABanner,5000);
+}
+window.openAddProfile=function(){
+  buildAvGrid(); selAvatar='A'; profType='adulto';
+  $('typeAdulto').classList.add('active');$('typeInf').classList.remove('active');
+  $('pinSec').style.display='block';
+  ['p0','p1','p2','p3'].forEach(id=>{if($(id))$(id).value='';});
+  $('profName').value='';
+  $('addProfModal').classList.add('open');
+};
+window.closeModal=id=>$(id).classList.remove('open');
+function buildAvGrid(){const g=$('avGrid');if(!g)return;g.innerHTML=AVATARS.map(a=>`<div class="av-opt${a===selAvatar?' sel':''}" onclick="selAv('${a}')" style="font-family:var(--fd);font-size:16px;font-weight:700;color:var(--gold);">${a}</div>`).join('');}
+window.selAv=function(a){selAvatar=a;document.querySelectorAll('.av-opt').forEach(el=>el.classList.toggle('sel',el.textContent===a));};
+window.setProfType=function(t){profType=t;$('typeAdulto').classList.toggle('active',t==='adulto');$('typeInf').classList.toggle('active',t==='infantil');$('pinSec').style.display=t==='adulto'?'block':'none';};
+window.pinNext=function(i){const v=$(('p'+i)).value.replace(/\D/g,'');$('p'+i).value=v;if(v&&i<3)$('p'+(i+1)).focus();};
+window.createProfile=function(){
+  const nome=$('profName').value.trim();
+  if(!nome){showToast('Digite o nome do perfil');return;}
+  let pin='';
+  if(profType==='adulto'){pin=['p0','p1','p2','p3'].map(id=>$(id)?.value||'').join('');if(pin.length!==4){showToast('Digite os 4 dígitos do PIN');return;}}
+  const colors=['linear-gradient(135deg,#c9a227,#7a6100)','linear-gradient(135deg,#1a73e8,#0d47a1)','linear-gradient(135deg,#e91e63,#880e4f)','linear-gradient(135deg,#4caf50,#1b5e20)','linear-gradient(135deg,#9c27b0,#4a148c)'];
+  const p={nome,avatar:selAvatar,tipo:profType,pin,color:colors[Math.floor(Math.random()*colors.length)]};
+  const k='prof_'+(currentUser?.uid||'');const s=JSON.parse(localStorage.getItem(k)||'[]');s.push(p);localStorage.setItem(k,JSON.stringify(s));
+  closeModal('addProfModal');renderProfiles();showToast('Perfil criado com sucesso!');
+};
+
+// ── NAVEGAÇÃO ───────────────────────────────────────────
+window.goPage=function(p){
+  document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
+  const t=$('page-'+p);if(t)t.classList.add('active');
+  document.querySelectorAll('.nav-it').forEach(el=>el.classList.remove('active'));
+  const n=$('nav-'+p);if(n)n.classList.add('active');
+  if(!loadedPages.has(p)){
+    if(p==='movies')loadMovies();
+    if(p==='series')loadSeries();
+    if(p==='animes')loadAnimes();
+    if(p==='ranking')loadRanking();
+    if(p==='favorites')loadFavs();
+    if(p==='coins'){updCoinsUI();loadCoinsPage();}
+    loadedPages.add(p);
+  }
+  if(p==='search')setTimeout(()=>{const i=$('srchInput');if(i)i.focus();},100);
+};
+window.openDrawer=()=>{$('drawer').classList.add('open');$('drwOvr').classList.add('open');};
+window.closeDrawer=()=>{$('drawer').classList.remove('open');$('drwOvr').classList.remove('open');};
+window.addEventListener('scroll',()=>{const h=$('appHdr');if(h)h.classList.toggle('solid',window.scrollY>20);},{passive:true});
+
+// ── HOME ────────────────────────────────────────────────
+async function loadHome(){
+  const emptyMsg=id=>{const r=$(id);if(r)r.innerHTML='<div style="color:var(--muted);font-size:13px;padding:20px;">Conteúdo em breve</div>';};
+  ['rowPop','rowSer','rowAni','rowNew'].forEach(emptyMsg);
+  try{const pop=await tmdb('/movie/popular?page=1');if(pop.results?.[0])loadHero(pop.results[0]);}catch(e){}
+}
+function loadHero(it){
+  heroItem=it;
+  const t=it.title||it.name||'',y=(it.release_date||it.first_air_date||'').slice(0,4),s=it.vote_average?.toFixed(1)||'';
+  if(it.backdrop_path)$('heroImg').src=OIMG+it.backdrop_path;
+  $('heroTtl').textContent=t;$('heroDesc').textContent=it.overview||'';
+  $('heroMeta').innerHTML=[y,s?`${s}`:''].filter(Boolean).map(x=>`<span>${x}</span>`).join('<div class="hero-dot"></div>');
+}
+window.playHero=()=>{if(heroItem)openItem(heroItem,false);};
+
+function loadMovies(){const r=$('rowMov');if(r)r.innerHTML='<div style="color:var(--muted);font-size:13px;padding:40px 20px;text-align:center;line-height:1.8;">Catálogo em configuração.<br>Os títulos serão adicionados manualmente.</div>';}
+function loadSeries(){const r=$('rowSeries');if(r)r.innerHTML='<div style="color:var(--muted);font-size:13px;padding:40px 20px;text-align:center;line-height:1.8;">Catálogo em configuração.<br>Os títulos serão adicionados manualmente.</div>';}
+function loadAnimes(){const r=$('rowAnimes');if(r)r.innerHTML='<div style="color:var(--muted);font-size:13px;padding:40px 20px;text-align:center;line-height:1.8;">Catálogo em configuração.<br>Os títulos serão adicionados manualmente.</div>';}
+function renderTV(){
+  const g=$('tvGrid');
+  if(g)g.innerHTML='<div style="grid-column:1/-1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;gap:16px;"><svg style=\"width:44px;height:44px;color:var(--muted2)\"><use href=\"#ico-channel\"/></svg><div style=\"font-size:14px;color:var(--muted);text-align:center;line-height:1.7;\">Nenhum canal configurado.<br>Os canais serão adicionados manualmente.</div></div>';
+}
+async function loadRanking(){const d=await tmdb('/movie/top_rated?page=1');const l=$('rankList');if(!l)return;l.innerHTML=(d.results||[]).slice(0,20).map((it,i)=>`<div style="display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--border);"><div style="font-family:var(--fd);font-size:22px;color:${i<3?'var(--gold)':'var(--muted2)'};width:32px;text-align:center;">${i+1}</div>${it.poster_path?`<img src="${IMG+it.poster_path}" style="width:44px;height:66px;border-radius:6px;object-fit:cover;" loading="lazy">`:'<div style="width:44px;height:66px;border-radius:6px;background:var(--s2);"></div>'}<div style="flex:1;"><div style="font-size:14px;font-weight:600;margin-bottom:3px;">${it.title||it.name||''}</div><div style="font-size:12px;color:var(--gold);">${it.vote_average?.toFixed(1)||'—'}</div></div></div>`).join('');}
+function loadFavs(){const r=$('rowFavs');if(!r)return;const f=JSON.parse(localStorage.getItem('fav_'+(currentUser?.uid||''))||'[]');if(!f.length){r.innerHTML='<div style="color:var(--muted);font-size:13px;padding:20px;">Nenhum favorito</div>';return;}renderRow('rowFavs',f);}
+function loadCoinsPage(){const h=JSON.parse(localStorage.getItem('ch_'+(currentUser?.uid||''))||'[]');const b=$('coinsHist');if(!b)return;if(!h.length){b.innerHTML='<div style="font-size:13px;color:var(--muted2);text-align:center;padding:20px;">Sem transações</div>';return;}b.innerHTML=h.slice(-20).reverse().map(x=>`<div class="ch-item"><div style="font-size:13px;color:var(--muted);">${x.desc}</div><div class="ch-val ${x.val>0?'pos':'neg'}">${x.val>0?'+':''}${x.val} RC</div></div>`).join('');}
+
+// ── BUSCA ───────────────────────────────────────────────
+window.doSearch=function(q){$('srchClear').style.display=q?'block':'none';clearTimeout(srchTimer);if(!q.trim()){resetSrch();return;}srchTimer=setTimeout(()=>execSrch(q),400);};
+window.clearSearch=function(){$('srchInput').value='';$('srchClear').style.display='none';resetSrch();};
+function resetSrch(){$('srchRes').innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:300px;gap:12px;"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--muted2)" stroke-width="1.5" style="opacity:.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg><div style="font-size:14px;color:var(--muted);">Digite para buscar</div></div>';}
+async function execSrch(q){
+  $('srchRes').innerHTML='<div style="color:var(--muted);padding:20px;text-align:center;">Buscando...</div>';
+  const d=await tmdb(`/search/multi?query=${encodeURIComponent(q)}&page=1`);
+  const its=(d.results||[]).filter(x=>x.media_type!=='person');
+  if(!its.length){$('srchRes').innerHTML='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:300px;gap:12px;"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--muted2)" stroke-width="1.5" style="opacity:.6"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg><div style="font-size:14px;color:var(--muted);">Nenhum resultado</div></div>';return;}
+  $('srchRes').innerHTML='<div class="row" style="flex-wrap:wrap;overflow:visible;gap:12px;padding:8px 0 20px;"></div>';
+  const row=$('srchRes').querySelector('.row');
+  if(row)row.innerHTML=its.map(it=>{const tv=it.media_type==='tv',t=it.title||it.name||'',p=it.poster_path?IMG+it.poster_path:'';const data=JSON.stringify(it).replace(/"/g,'&quot;');return `<div class="card" style="width:clamp(100px,28vw,140px);" onclick="openItem(${data},${tv})">${p?`<img class="card-poster" src="${p}" alt="${t}" loading="lazy">`:`<div class="card-poster" style="display:flex;align-items:center;justify-content:center;"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--muted2)" stroke-width="1.5"><rect x="2" y="2" width="20" height="20" rx="2"/><path d="m7 2 5 5 5-5M2 7l5 5-5 5"/></svg></div>`}<div class="card-info"><div class="card-title">${t}</div></div></div>`;}).join('');
+}
+
+// ── FEEDBACK ────────────────────────────────────────────
+window.setStar=function(n){starRating=n;document.querySelectorAll('.star').forEach((s,i)=>s.classList.toggle('active',i<n));};
+window.sendFeedback=async function(){
+  const text=$('fbText')?.value?.trim();
+  if(!starRating){showToast('Selecione uma avaliação');return;}
+  if(!text){showToast('Escreva um comentário');return;}
+  try{
+    await push(ref(db,'royal-streams/feedbacks'),{uid:currentUser?.uid,nome:currentUser?.nome,perfil:currentProfile?.nome,stars:starRating,text,ts:new Date().toISOString()});
+    $('fbText').value='';starRating=0;document.querySelectorAll('.star').forEach(s=>s.classList.remove('active'));
+    coins+=20;syncCoins();addHist('Feedback enviado',20);updCoinsUI();
+    showToast('+20 coins pelo feedback!');
+  }catch(e){showToast('Erro ao enviar.');}
+};
+
+// ── PLAYER ──────────────────────────────────────────────
+window.openItem=function(it,isTv=false){
+  if(coins<10){showToast('Saldo insuficiente. Necessário 10 coins.');return;}
+  coins-=10;addHist(`Assistindo: ${it.title||it.name||''}`,-10);updCoinsUI();syncCoins();
+  playerState={item:it,isTv,lang:'pt',server:0};
+  $('plTtl').textContent=it.title||it.name||'';
+  renderSrvBtns();$('langPT').classList.add('active');$('langEN').classList.remove('active');
+  _playerOpen=true;loadPlayer();$('playerModal').classList.add('open');
+};
+window.closePlayer=function(){
+  _playerOpen=false;$('playerModal').classList.remove('open');
+  setTimeout(()=>{const f=$('playerFrame');if(f)f.src='about:blank';},100);
+  playerState.item=null;
+};
+window.setLang=function(l){playerState.lang=l;$('langPT').classList.toggle('active',l==='pt');$('langEN').classList.toggle('active',l==='en');loadPlayer();};
+window.switchServer=function(i){playerState.server=i;renderSrvBtns();loadPlayer();showToast('Servidor: '+SERVERS[i].n);};
+function renderSrvBtns(){const c=$('srvBtns');if(!c)return;c.innerHTML=SERVERS.map((s,i)=>`<button class="opt-btn${i===playerState.server?' active':''}" onclick="switchServer(${i})">${s.n}</button>`).join('');}
+function loadPlayer(){const{item,isTv,lang,server}=playerState;if(!item)return;$('playerFrame').src=SERVERS[server].u(item.id,isTv,lang);}
+
+const _wopen=window.open.bind(window);
+window.open=(...a)=>{if(_playerOpen){console.warn('[Shield] bloqueado');return null;}return _wopen(...a);};
+window.addEventListener('beforeunload',e=>{if(_playerOpen){e.preventDefault();e.returnValue='';}});
+
+// ── PWA ─────────────────────────────────────────────────
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e;});
+function showPWABanner(){if(deferredPrompt&&!localStorage.getItem('pwaDis'))$('pwaBanner').classList.add('show');}
+window.installPWA=async function(){
+  if(deferredPrompt){deferredPrompt.prompt();const{outcome}=await deferredPrompt.userChoice;if(outcome==='accepted')showToast('Aplicativo instalado com sucesso!');deferredPrompt=null;}
+  else showToast('Use o menu do navegador → "Adicionar à tela inicial"');
+  dismissPWA();
+};
+window.dismissPWA=function(){$('pwaBanner').classList.remove('show');localStorage.setItem('pwaDis','1');};
+
+// SERVICE WORKER
+if('serviceWorker'in navigator){
+  const sw=`const C='rs-v1';self.addEventListener('install',e=>e.waitUntil(caches.open(C).then(c=>c.addAll(['/']))));self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).catch(()=>caches.match('/'))));});`;
+  const blob=new Blob([sw],{type:'application/javascript'});
+  navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
+}
+// MANIFEST
+const mf={name:'Royal Streams',short_name:'Royal',start_url:'/',display:'standalone',background_color:'#06080f',theme_color:'#c9a227',icons:[{src:'https://i.ibb.co/vfbZP0R/file-00000000bb74720e9f2d3864d478e87f.png',sizes:'512x512',type:'image/png'}]};
+const ml=document.createElement('link');ml.rel='manifest';ml.href=URL.createObjectURL(new Blob([JSON.stringify(mf)],{type:'application/json'}));document.head.appendChild(ml);
+
+</script>
+</body>
+</html>
